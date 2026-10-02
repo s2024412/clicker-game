@@ -3,65 +3,198 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Click Reactor</title>
+<title>The House</title>
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:system-ui,Arial,sans-serif;background:#0b1020;color:#f5f7ff;display:flex;justify-content:center}
-.wrap{width:min(1000px,94vw);padding:28px 0}.top{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap}
-h1{margin:0;font-size:clamp(2rem,6vw,4rem);letter-spacing:-2px}.sub{color:#9ba7c4;margin-top:4px}
-.stats{display:flex;gap:10px;flex-wrap:wrap}.stat{background:#151d34;border:1px solid #283454;border-radius:14px;padding:10px 15px;min-width:125px}.stat b{display:block;font-size:1.35rem}.stat span{color:#8f9ab5;font-size:.78rem}
-.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;margin-top:22px}.panel{background:#11182c;border:1px solid #283454;border-radius:22px;padding:20px}
-.coreArea{min-height:500px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
-#core{width:min(310px,65vw);aspect-ratio:1;border-radius:50%;border:10px solid #5267ff;background:radial-gradient(circle at 35% 30%,#fff 0 2%,#9da8ff 4%,#596aff 25%,#2839a6 58%,#111b55 100%);box-shadow:0 0 35px #5267ff88, inset 0 0 45px #fff5;cursor:pointer;color:white;font-size:3rem;font-weight:900;transition:transform .08s,filter .2s}
-#core:active{transform:scale(.94)}#core:hover{filter:brightness(1.12)}
-.hint{color:#8f9ab5;margin:18px 0 0;text-align:center}.float{position:absolute;pointer-events:none;font-weight:900;font-size:1.4rem;animation:rise .75s ease-out forwards}
-@keyframes rise{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(-100px) scale(1.25)}}
-h2{margin:0 0 14px}.shop{display:grid;gap:10px}.upgrade{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px;background:#171f36;border:1px solid #293554;border-radius:14px}.upgrade small{display:block;color:#8f9ab5;margin-top:3px}
-button.buy,button.reset{border:0;border-radius:11px;padding:10px 13px;font-weight:800;cursor:pointer;background:#6475ff;color:#fff;white-space:nowrap}button.buy:disabled{opacity:.4;cursor:not-allowed}
-.ach{margin-top:18px}.badge{display:inline-block;background:#1c2743;border:1px solid #344263;border-radius:999px;padding:7px 10px;margin:4px;font-size:.8rem}.locked{opacity:.4}
-.bottom{margin-top:16px;display:flex;justify-content:space-between;gap:10px;align-items:center;color:#8f9ab5}.reset{background:#26304b!important}
-@media(max-width:760px){.grid{grid-template-columns:1fr}.coreArea{min-height:430px}.stats{width:100%}.stat{flex:1}}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#080b14;color:#eee;font-family:monospace;image-rendering:pixelated}
+body{display:grid;place-items:center;overflow:hidden}
+#game{width:min(100vw,1100px);height:min(100vh,680px);position:relative;background:#101625;border:4px solid #30364b;box-shadow:0 0 0 4px #090b12,0 18px 60px #000}
+canvas{width:100%;height:100%;display:block;background:#0b1020;image-rendering:pixelated}
+#hud{position:absolute;inset:14px 16px auto;display:flex;gap:10px;pointer-events:none;z-index:3}
+.pill{background:#111827e8;border:2px solid #454d67;padding:7px 10px;box-shadow:3px 3px #070910;font-size:14px}
+#msg{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);min-width:330px;max-width:85%;padding:10px 14px;text-align:center;background:#111827f2;border:2px solid #b18a4a;box-shadow:4px 4px #070910;z-index:4;font-size:14px}
+#menu{position:absolute;inset:0;display:grid;place-items:center;background:#090d18dd;z-index:5}
+.panel{width:min(760px,90%);padding:30px;background:#121827;border:3px solid #4c5570;box-shadow:8px 8px #05070d;text-align:center}
+h1{font-size:clamp(34px,7vw,70px);letter-spacing:5px;margin:0;color:#d8b36b;text-shadow:4px 4px #543c26}
+h2{color:#d8b36b;margin:5px 0 20px}.sub{color:#8f9ab4;margin-bottom:22px;line-height:1.6}
+button{font:inherit;color:#f5ead1;background:#1c2639;border:2px solid #b18a4a;padding:11px 16px;margin:5px;cursor:pointer;box-shadow:3px 3px #070910}
+button:hover{background:#293650;transform:translate(-1px,-1px)}
+.small{font-size:12px;color:#7e89a2}.hidden{display:none!important}
+#touch{position:absolute;inset:auto 10px 55px;display:flex;justify-content:center;gap:7px;z-index:4;pointer-events:none}
+#touch button{pointer-events:auto;opacity:.9;padding:8px 11px}
+@media(max-width:700px){#hud{font-size:11px}.pill{padding:5px 7px}#msg{min-width:0;font-size:12px}.panel{padding:20px}}
 </style>
 </head>
 <body>
-<main class="wrap">
-<div class="top"><div><h1>⚡ Click Reactor</h1><div class="sub">Click. Upgrade. Become absurdly powerful.</div></div>
-<div class="stats"><div class="stat"><b id="score">0</b><span>ENERGY</span></div><div class="stat"><b id="cps">0</b><span>PER SECOND</span></div><div class="stat"><b id="power">1</b><span>PER CLICK</span></div></div></div>
-<div class="grid">
-<section class="panel coreArea" id="arena"><button id="core" aria-label="Generate energy">CLICK</button><div class="hint">Click the reactor to generate energy</div></section>
-<section class="panel"><h2>Upgrades</h2><div class="shop">
-<div class="upgrade"><div><b>⚡ Stronger Clicks</b><small>+1 energy per click</small></div><button class="buy" data-up="click">Buy · <span id="clickCost">25</span></button></div>
-<div class="upgrade"><div><b>🤖 Auto Reactor</b><small>+1 energy per second</small></div><button class="buy" data-up="auto">Buy · <span id="autoCost">75</span></button></div>
-<div class="upgrade"><div><b>💥 Critical Core</b><small>+5% chance for a 5× click</small></div><button class="buy" data-up="crit">Buy · <span id="critCost">150</span></button></div>
-<div class="upgrade"><div><b>🔥 Overclock</b><small>+5 energy per second</small></div><button class="buy" data-up="over">Buy · <span id="overCost">500</span></button></div>
+<div id="game">
+<canvas id="c" width="960" height="600"></canvas>
+<div id="hud" class="hidden">
+  <div class="pill">♥ <span id="hp">5</span></div>
+  <div class="pill">◆ <span id="chips">0</span></div>
+  <div class="pill">FLOOR <span id="floor">1</span></div>
+  <div class="pill">SUSPICION <span id="sus">0</span>%</div>
 </div>
-<div class="ach"><h2>Achievements</h2><span class="badge locked" id="a100">100 Energy</span><span class="badge locked" id="a1k">1,000 Energy</span><span class="badge locked" id="a10k">10,000 Energy</span><span class="badge locked" id="aCrit">First Critical</span></div>
-<div class="bottom"><span>Autosaves in your browser</span><button class="reset" id="reset">Reset Game</button></div>
-</section>
+<div id="msg" class="hidden"></div>
+<div id="touch" class="hidden">
+<button onclick="act('up')">▲</button><button onclick="act('left')">◀</button><button onclick="act('down')">▼</button><button onclick="act('right')">▶</button><button onclick="act('dash')">DASH</button>
 </div>
-</main>
+<div id="menu">
+  <div class="panel" id="titlePanel">
+    <h1>THE HOUSE</h1><h2>ALWAYS WINS</h2>
+    <div class="sub">A pixel-art roguelike about luck, combat, and a casino that slowly notices you.</div>
+    <button onclick="start()">DEAL ME IN</button>
+    <div class="small">Arrow keys / WASD to move · Space to dash · Enter to interact</div>
+  </div>
+  <div class="panel hidden" id="endPanel"></div>
+</div>
+</div>
 <script>
-const key="clickReactorSave";
-let s=JSON.parse(localStorage.getItem(key)||"null")||{energy:0,total:0,click:1,auto:0,crit:0,over:0,costs:{click:25,auto:75,crit:150,over:500},firstCrit:false};
-const $=id=>document.getElementById(id), fmt=n=>Math.floor(n).toLocaleString();
-function save(){localStorage.setItem(key,JSON.stringify(s))}
-function render(){
-$("score").textContent=fmt(s.energy);$("cps").textContent=fmt(s.auto+s.over*5);$("power").textContent=fmt(s.click);
-for(const x of ["click","auto","crit","over"]){$(x+"Cost").textContent=fmt(s.costs[x])}
-document.querySelectorAll(".buy").forEach(b=>{const u=b.dataset.up;b.disabled=s.energy<s.costs[u]});
-[["a100",s.total>=100],["a1k",s.total>=1000],["a10k",s.total>=10000],["aCrit",s.firstCrit]].forEach(([id,on])=>$(id).classList.toggle("locked",!on));
+const C=document.getElementById('c'),x=C.getContext('2d');x.imageSmoothingEnabled=false;
+const W=960,H=600;
+let keys={},state='menu',room='lobby',floor=1,hp=5,maxHp=5,chips=80,suspicion=0;
+let px=480,py=470,spd=3.1,inv=0,dash=0,atk=0,shake=0;
+let enemies=[],particles=[],cards=[],message='',msgT=0,choice=null,roulette=null,blackjack=null;
+const colors={bg:'#0b1020',floor:'#171d2e',wall:'#252c42',gold:'#d8b36b',cream:'#efe4c9',muted:'#69738e',red:'#a84e55',green:'#668f72',blue:'#597aa6',purple:'#75659a'};
+document.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(e.key.toLowerCase()))e.preventDefault();if(e.key==='Enter')interact();});
+document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+function start(){document.getElementById('menu').classList.add('hidden');document.getElementById('hud').classList.remove('hidden');document.getElementById('touch').classList.remove('hidden');reset();room='lobby';say('Welcome, friend. The odds are unusually kind tonight.');}
+function reset(){floor=1;hp=maxHp=5;chips=80;suspicion=0;cards=[];px=480;py=470;enemies=[];choice=null;roulette=blackjack=null;state='play';}
+function say(t,n=180){message=t;msgT=n;document.getElementById('msg').textContent=t;document.getElementById('msg').classList.remove('hidden')}
+function hideMsg(){document.getElementById('msg').classList.add('hidden')}
+function act(a){keys[a==='dash'?' ':a]=true;setTimeout(()=>keys[a==='dash'?' ':a]=false,90)}
+function addChip(n){chips=Math.max(0,chips+n);ui()}
+function addSus(n){suspicion=Math.min(100,suspicion+n);ui()}
+function ui(){hpEl.textContent=hp;chipsEl.textContent=chips;floorEl.textContent=floor;susEl.textContent=suspicion}
+const hpEl=document.getElementById('hp'),chipsEl=document.getElementById('chips'),floorEl=document.getElementById('floor'),susEl=document.getElementById('sus');
+
+function roomStart(){room='lobby';px=480;py=480;enemies=[];choice=null;roulette=blackjack=null;say(floor===1?'The lobby is quiet. Four doors, one elevator.':'The next floor waits. The House is watching a little closer.');}
+function interact(){
+ if(state!=='play')return;
+ if(roulette||blackjack)return;
+ if(room==='lobby' && py<115){floor++;if(floor>=6){room='casinoBoss';spawnBoss();}else roomStart();return}
+ if(room==='lobby'){
+   if(py<260&&px<260){room='roulette';roulette={bet:20};say('ROULETTE. Pick a number. A little luck never hurt.');return}
+   if(py<260&&px>700){room='blackjack';blackjack={bet:20,player:[],dealer:[]};dealBJ();return}
+   if(py>300&&px<300){room='combat';spawnFight();return}
+   if(py>300&&px>660){room='shop';shop();return}
+ }
+ if(room==='shop'){shop();return}
+ if(room==='combat'&&enemies.length===0){room='lobby';say('The room is clear. Your chips feel heavier.');}
 }
-function burst(text,x,y){const e=document.createElement("div");e.className="float";e.textContent=text;e.style.left=(x-25)+"px";e.style.top=(y-15)+"px";$("arena").appendChild(e);setTimeout(()=>e.remove(),750)}
-$("core").addEventListener("click",e=>{
-let amount=s.click,crit=Math.random()<s.crit*.05;if(crit){amount*=5;s.firstCrit=true}
-s.energy+=amount;s.total+=amount;burst((crit?"CRIT! ":"+")+fmt(amount),e.clientX-$("arena").getBoundingClientRect().left,e.clientY-$("arena").getBoundingClientRect().top);render();save()
-});
-document.querySelectorAll(".buy").forEach(b=>b.addEventListener("click",()=>{
-const u=b.dataset.up,c=s.costs[u];if(s.energy<c)return;s.energy-=c;
-if(u==="click")s.click+=1;if(u==="auto")s.auto+=1;if(u==="crit")s.crit+=1;if(u==="over")s.over+=1;
-s.costs[u]=Math.ceil(c*1.55);render();save()
-}));
-setInterval(()=>{const gain=s.auto+s.over*5;if(gain){s.energy+=gain;s.total+=gain;render();save()}},1000);
-$("reset").addEventListener("click",()=>{if(confirm("Reset all progress?")){localStorage.removeItem(key);location.reload()}});
-render();
+function spawnFight(){room='combat';enemies=[];let n=Math.min(3,1+Math.floor(floor/2));for(let i=0;i<n;i++)enemies.push({x:220+i*240,y:170+Math.random()*100,hp:2+Math.floor(floor/2),type:i%2,cd:0});say('No cards. No tables. Just a fight.');}
+function spawnBoss(){enemies=[{x:480,y:180,hp:18+floor*2,type:3,boss:true,cd:0}];say('THE HOUSE HAS NOTICED YOU.');}
+function shop(){
+state='shop';let cost=35+floor*5;
+choice={kind:'shop',cost};say('THE QUIET COUNTER: heal +1 for '+cost+' chips. Enter to buy, Esc to leave.'); 
+}
+function dealBJ(){blackjack.player=[drawCard(),drawCard()];blackjack.dealer=[drawCard(),drawCard()];}
+function drawCard(){return Math.floor(Math.random()*13)+1}
+function val(hand){return hand.reduce((a,n)=>a+(n>10?10:n),0)}
+function playBJ(){
+ if(!blackjack)return;
+ if(blackjack.player.length>=5){bjStand();return}
+ blackjack.player.push(drawCard()); if(val(blackjack.player)>21){addChip(-blackjack.bet);addSus(3);say('BUST. The table smiles.');blackjack=null;room='lobby';}else say('You drew '+blackjack.player.at(-1)+'. Enter to hit again, S to stand.');
+}
+function bjStand(){
+while(val(blackjack.dealer)<17)blackjack.dealer.push(drawCard());
+let p=val(blackjack.player),d=val(blackjack.dealer),b=blackjack.bet;
+if(p>21){addChip(-b)}else if(d>21||p>d){addChip(b*2);addSus(p===21?4:2);say('You win '+b*2+' chips.');}else if(p===d){addChip(b);say('Push. Your chips return.')}else{addChip(-b);addSus(2);say('Dealer wins.');}
+blackjack=null;room='lobby';
+}
+function spinRoulette(){
+let bet=roulette.bet;if(chips<bet){say('Not enough chips.');return}
+let n=Math.floor(Math.random()*37),pick=Math.floor(Math.random()*37);
+let luckyBonus=cards.includes('Lucky Coin')?0.08:0;
+let win=Math.random()<(0.5-luckyBonus*0); // starts close to fair, not guaranteed
+if(suspicion<25)win=Math.random()<0.48; else if(suspicion<60)win=Math.random()<0.40; else win=Math.random()<0.31;
+if(win){addChip(bet*3);addSus(3);say('The wheel lands your way. +'+bet*3+' chips.');}else{addChip(-bet);addSus(1);say('The ball misses. It was close.');}
+roulette=null;room='lobby';
+}
+function buyCard(name,cost){
+if(chips<cost){say('Not enough chips.');return}
+chips-=cost;if(!cards.includes(name))cards.push(name);say('Acquired: '+name);choice=null;state='play';room='lobby';ui();
+}
+function move(){
+if(state!=='play'||room==='roulette'||room==='blackjack')return;
+let dx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),dy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
+if(dx||dy){let l=Math.hypot(dx,dy);px+=dx/l*spd;py+=dy/l*spd}
+px=Math.max(55,Math.min(905,px));py=Math.max(80,Math.min(535,py));
+if(keys[' ']&&dash<=0){dash=45;inv=35;let dx2=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),dy2=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);if(dx2||dy2){px+=dx2*55;py+=dy2*55}}
+if(dash>0)dash--;if(inv>0)inv--;
+if(keys.z||keys.x){attack();keys.z=keys.x=false}
+}
+function attack(){
+if(atk>0)return;atk=18;
+for(let e of enemies){if(Math.hypot(e.x-px,e.y-py)<72){e.hp--;particles.push(...burst(e.x,e.y,'#d8b36b',8));if(e.hp<=0){addChip(e.boss?180:25+floor*8);if(e.boss){winBoss()} }break}}
+}
+function winBoss(){enemies=[];if(floor<6){floor++;roomStart();}else win();}
+function hit(){
+if(inv>0)return;hp--;inv=45;shake=8;particles.push(...burst(px,py,'#a84e55',10));if(hp<=0)lose();ui();
+}
+function enemyAI(){
+for(let e of enemies){if(e.cd>0)e.cd--;let dx=px-e.x,dy=py-e.y,d=Math.hypot(dx,dy)||1;
+if(d>62){e.x+=dx/d*(e.boss?0.9:0.65);e.y+=dy/d*(e.boss?0.9:0.65)}else if(e.cd<=0){hit();e.cd=e.boss?45:70}
+if(e.boss&&Math.random()<0.018){for(let i=0;i<6;i++){let a=i*Math.PI/3+performance.now()/900;particles.push({x:e.x,y:e.y,vx:Math.cos(a)*3,vy:Math.sin(a)*3,life:70,orb:true})}}}
+}
+function burst(px,py,col,n){return Array.from({length:n},()=>({x:px,y:py,vx:(Math.random()-.5)*5,vy:(Math.random()-.5)*5,life:30,col}))}
+function particlesTick(){for(let p of particles){p.x+=p.vx;p.y+=p.vy;p.vy+=.04;p.life--}particles=particles.filter(p=>p.life>0)}
+function particleHits(){for(let p of particles)if(p.orb&&Math.hypot(p.x-px,p.y-py)<10){p.life=0;hit()}}
+
+function draw(){
+x.fillStyle=colors.bg;x.fillRect(0,0,W,H);
+if(state==='menu'){drawBackdrop();return}
+if(room==='lobby')drawLobby();else if(room==='combat')drawArena();else if(room==='shop')drawShop();else if(room==='roulette')drawRoulette();else if(room==='blackjack')drawBlackjack();else if(room==='casinoBoss')drawArena();
+if(state==='shop')drawShopOverlay();
+if(msgT>0){msgT--;if(msgT===0)hideMsg()}
+drawPlayer();drawParticles();if(shake){x.save();x.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);x.restore();shake--}
+}
+
+function pxRect(a,b,w,h,c){x.fillStyle=c;x.fillRect(Math.round(a),Math.round(b),w,h)}
+function text(t,a,b,size=16,c=colors.cream){x.fillStyle=c;x.font=size+'px monospace';x.fillText(t,a,b)}
+function drawBackdrop(){
+for(let i=0;i<18;i++){let bx=i*58;let bh=80+(i%5)*35;pxRect(bx,430-bh,45,bh,'#151c30');pxRect(bx+7,440-bh,5,7,colors.gold);pxRect(bx+25,420-bh,5,7,'#7184a7')}
+pxRect(210,110,540,330,'#151c2b');pxRect(235,90,490,40,'#1d2639');pxRect(270,145,420,260,'#202a3d');pxRect(300,175,360,200,'#101726');text('THE HOUSE',355,275,34,colors.gold);
+}
+function drawLobby(){
+drawBackdrop();pxRect(60,475,840,60,'#101625');
+table(130,155,'ROULETTE');table(735,155,'BLACKJACK');
+door(180,365,'FIGHT');door(780,365,'COUNTER');door(480,75,'ELEVATOR');
+text('ENTER',445,105,12,colors.muted);
+}
+function table(cx,cy,label){x.fillStyle='#5d4933';x.fillRect(cx-115,cy-25,230,70);x.fillStyle='#172d2b';x.fillRect(cx-100,cy-15,200,45);x.strokeStyle=colors.gold;x.strokeRect(cx-100,cy-15,200,45);text(label,cx-55,cy+55,13,colors.gold)}
+function door(cx,cy,label){pxRect(cx-50,cy-65,100,130,'#282f42');pxRect(cx-35,cy-50,70,115,'#101625');text(label,cx-35,cy+80,12,colors.gold)}
+function drawArena(){
+pxRect(55,70,850,475,'#111827');for(let i=0;i<18;i++)for(let j=0;j<9;j++)if((i+j)%2===0)pxRect(60+i*47,75+j*52,45,50,'#151d2c');
+text(room==='casinoBoss'?'THE HOUSE':'COMBAT',75,105,18,colors.gold);
+}
+function drawShop(){pxRect(90,110,780,400,'#171d2e');text('THE QUIET COUNTER',330,160,24,colors.gold);text('A few things the House is willing to sell.',280,190,14,colors.muted);cardBox(210,245,'HEART','Heal +1','35 chips');cardBox(480,245,'LUCKY COIN','Reroll-ish luck','55 chips')}
+function cardBox(a,b,c,d){pxRect(a-100,b-70,200,160,'#20283b');x.strokeStyle=colors.gold;x.strokeRect(a-100,b-70,200,160);text(b,a-80,b-15,15,colors.cream);text(c,a-80,b+20,12,colors.muted);text(d,a-80,b+55,12,colors.gold)}
+function drawShopOverlay(){}
+function drawRoulette(){
+pxRect(100,90,760,430,'#151d2d');text('ROULETTE',390,145,28,colors.gold);x.beginPath();x.arc(480,300,130,0,Math.PI*2);x.fillStyle='#263047';x.fill();x.strokeStyle=colors.gold;x.lineWidth=5;x.stroke();for(let i=0;i<18;i++){let a=i*Math.PI/9;x.strokeStyle=i%2?colors.red:'#d7c8a5';x.beginPath();x.moveTo(480+Math.cos(a)*30,300+Math.sin(a)*30);x.lineTo(480+Math.cos(a)*120,300+Math.sin(a)*120);x.stroke()}text('BET: '+roulette.bet+' CHIPS',410,480,16);text('ENTER TO SPIN · ESC TO LEAVE',325,505,12,colors.muted)}
+function drawBlackjack(){
+pxRect(100,90,760,430,'#151d2d');text('BLACKJACK',355,145,28,colors.gold);text('YOU',190,210,15,colors.muted);text('DEALER',690,210,15,colors.muted);hand(190,245,blackjack.player);hand(610,245,blackjack.dealer,true);text('ENTER = HIT   S = STAND   ESC = LEAVE',260,485,13,colors.muted);text('BET: '+blackjack.bet,425,450,15,colors.gold)}
+function hand(cx,cy,h,hide){h.forEach((n,i)=>{pxRect(cx+i*58,cy,48,70,hide&&i===1?'#263047':'#ded2b7');text(hide&&i===1?'?':String(n),cx+16+i*58,cy+42,18,hide&&i===1?colors.gold:'#111827')})}
+function drawPlayer(){if(state==='menu')return;let blink=inv>0&&Math.floor(inv/5)%2;if(blink)return;pxRect(px-10,py-14,20,25,'#d8b36b');pxRect(px-7,py-22,14,9,'#20283b');pxRect(px-14,py+8,28,6,'#8b6544');if(atk>8){x.strokeStyle=colors.cream;x.lineWidth=4;x.beginPath();x.moveTo(px+8,py);x.lineTo(px+42,py-15);x.stroke()}if(atk>0)atk--}
+function drawEnemies(){for(let e of enemies){let c=e.boss?'#b18a4a':e.type?'#75659a':'#597aa6';pxRect(e.x-14,e.y-18,28,36,c);pxRect(e.x-10,e.y-28,20,10,'#20283b');if(e.boss){pxRect(e.x-25,e.y-42,50,7,'#263047');pxRect(e.x-25,e.y-42,50*(e.hp/(18+floor*2)),7,colors.gold)}}}
+function drawParticles(){for(let p of particles){x.globalAlpha=Math.max(0,p.life/30);pxRect(p.x,p.y,4,4,p.col||colors.gold)}x.globalAlpha=1}
+function update(){move();if(room==='combat'||room==='casinoBoss')enemyAI();particlesTick();particleHits();drawEnemies();ui();requestAnimationFrame(update)}
+function loop(){draw();requestAnimationFrame(loop)}
+function keyActions(){
+if(state==='shop'&&keys.escape){state='play';room='lobby';choice=null;keys.escape=false}
+if(room==='roulette'&&keys.escape){room='lobby';roulette=null;keys.escape=false}
+if(room==='blackjack'&&keys.escape){room='lobby';blackjack=null;keys.escape=false}
+if(room==='roulette'&&keys.enter){spinRoulette();keys.enter=false}
+if(room==='blackjack'&&keys.enter){playBJ();keys.enter=false}
+if(room==='blackjack'&&keys.s){bjStand();keys.s=false}
+if(room==='shop'&&keys.enter){if(chips>=choice.cost&&hp<maxHp){chips-=choice.cost;hp++;say('A quiet little heal.');state='play';room='lobby';choice=null}else say('You either lack chips or are already healthy.');keys.enter=false}
+if(room==='shop'&&keys.escape){state='play';room='lobby';choice=null;keys.escape=false}
+}
+setInterval(keyActions,50);
+const oldDraw=draw;function draw(){oldDraw();if(state!=='menu'&&room!=='roulette'&&room!=='blackjack'&&room!=='shop')drawEnemies();if(state==='menu'){}}
+function lose(){state='menu';document.getElementById('menu').classList.remove('hidden');document.getElementById('titlePanel').classList.add('hidden');document.getElementById('endPanel').classList.remove('hidden');document.getElementById('endPanel').innerHTML='<h2>THE HOUSE COLLECTS</h2><div class="sub">You reached floor '+floor+'.<br>Chips won: '+chips+'.<br><br>The casino will remember your run.</div><button onclick="location.reload()">PLAY AGAIN</button>';document.getElementById('hud').classList.add('hidden');document.getElementById('touch').classList.add('hidden')}
+function win(){state='menu';document.getElementById('menu').classList.remove('hidden');document.getElementById('titlePanel').classList.add('hidden');document.getElementById('endPanel').classList.remove('hidden');document.getElementById('endPanel').innerHTML='<h2>YOU BEAT THE HOUSE</h2><div class="sub">The casino falls quiet.<br><br>There is one chip left on the floor.</div><button onclick="location.reload()">RUN IT AGAIN</button>';document.getElementById('hud').classList.add('hidden');document.getElementById('touch').classList.add('hidden')}
+setInterval(()=>{if(room==='lobby'&&py<125&&Math.abs(px-480)<90){if(floor<6)say('The elevator waits. Press Enter.');else say('The House is behind these doors.');}},1000);
+requestAnimationFrame(update);requestAnimationFrame(loop);
 </script>
-</body></html>
+</body>
+</html>
